@@ -6,7 +6,7 @@ class Plugin:
     p_path = None
     is_php = False
     plu = None
-    __api_root_url = 'https://api.bt.cn'
+    __api_root_url = 'http://btapi.odata.cc'
     __api_url = __api_root_url+ '/panel/get_plugin_list'
     __cache_file = 'data/plugin_list.json'
 
@@ -18,12 +18,17 @@ class Plugin:
     def get_plugin_list(self, force = False):
         if force==False and os.path.exists(self.__cache_file):
             jsonData = public.readFile(self.__cache_file)
+            softList = json.loads(jsonData)
         else:
-            jsonData = public.HttpGet(self.__api_url)
+            try:
+                jsonData = public.HttpGet(self.__api_url)
+            except Exception as ex:
+                raise public.error_conn_cloud(str(ex))
+            softList = json.loads(jsonData)
+            if type(softList)!=dict or 'list' not in softList: raise Exception('云端插件列表获取失败')
             public.writeFile(self.__cache_file, jsonData)
 
-        arr = json.loads(jsonData)
-        return arr
+        return softList
         
     def isdef(self, fun):
         if not self.is_php:
